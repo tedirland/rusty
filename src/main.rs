@@ -2,19 +2,19 @@
 use rusty_engine::prelude::*;
 
 struct GameState {
-    high_score: u32,
+    // high_score: u32,
     current_score: u32,
-    enemy_labels: Vec<String>,
-    spawn_timer: Timer,
+    sweatpants_index: i32,
+    // spawn_timer: Timer,
 }
 
 impl Default for GameState {
     fn default() -> Self {
         Self {
-            high_score: 0,
+            // high_score: 0,
             current_score: 0,
-            enemy_labels: Vec::new(),
-            spawn_timer: Timer::from_seconds(1.0, false),
+            sweatpants_index: 0,
+            // spawn_timer: Timer::from_seconds(1.0, false),
         }
     }
 }
@@ -28,13 +28,6 @@ fn main() {
     player.rotation = SOUTH_WEST;
     player.scale = 1.0;
     player.collision = true;
-
-    let dsp = game.add_sprite("Dr. Sweatpants", "dr_sweatpants.png");
-    dsp.scale = 4.0;
-    dsp.translation = Vec2::new(300.0, 0.0);
-    dsp.scale = 4.0;
-    dsp.collision = true;
-    dsp.scale = 4.0;
 
     // setup game here
     game.add_logic(game_logic);
@@ -56,6 +49,48 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
             println!("Current score {}", game_state.current_score);
         }
     }
+
+    // handle movement
     let player = engine.sprites.get_mut("player").unwrap();
-    player.translation.x += 100.0 * engine.delta_f32;
+    if engine
+        .keyboard_state
+        .pressed_any(&[KeyCode::Up, KeyCode::W])
+    {
+        const MOVEMENT_SPEED: f32 = 100.0;
+        player.translation.y += MOVEMENT_SPEED * engine.delta_f32;
+    }
+    if engine
+        .keyboard_state
+        .pressed_any(&[KeyCode::Down, KeyCode::S])
+    {
+        const MOVEMENT_SPEED: f32 = 100.0;
+        player.translation.y -= MOVEMENT_SPEED * engine.delta_f32;
+    }
+    if engine
+        .keyboard_state
+        .pressed_any(&[KeyCode::Left, KeyCode::A])
+    {
+        const MOVEMENT_SPEED: f32 = 100.0;
+        player.translation.x -= MOVEMENT_SPEED * engine.delta_f32;
+    }
+    if engine
+        .keyboard_state
+        .pressed_any(&[KeyCode::Right, KeyCode::D])
+    {
+        const MOVEMENT_SPEED: f32 = 100.0;
+        player.translation.x += MOVEMENT_SPEED * engine.delta_f32;
+    }
+
+    // handle mouse input
+
+    if engine.mouse_state.just_pressed(MouseButton::Left) {
+        if let Some(mouse_location) = engine.mouse_state.location() {
+            let label = format!("drsweatpants{}", game_state.sweatpants_index);
+            game_state.sweatpants_index += 1;
+            let dsp = engine.add_sprite(label.clone(), "dr_sweatpants.png");
+            dsp.translation = mouse_location;
+            dsp.collision = true;
+            dsp.scale = 4.0;
+        }
+    }
 }
