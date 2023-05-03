@@ -1,20 +1,20 @@
 // init rusty_engine
+use rand::prelude::*;
 use rusty_engine::prelude::*;
 
 struct GameState {
     high_score: u32,
     score: u32,
     sweatpants_index: i32,
-    // spawn_timer: Timer,
+    spawn_timer: Timer,
 }
-
 impl Default for GameState {
     fn default() -> Self {
         Self {
             high_score: 0,
             score: 0,
             sweatpants_index: 0,
-            // spawn_timer: Timer::from_seconds(1.0, false),
+            spawn_timer: Timer::from_seconds(2.0, true),
         }
     }
 }
@@ -22,6 +22,9 @@ impl Default for GameState {
 fn main() {
     // create a mutable Game struct to keep track of state
     let mut game = Game::new();
+
+    game.audio_manager
+        .play_music(MusicPreset::MysteriousMagic, 0.1);
 
     let player = game.add_sprite("player", SpritePreset::RacingCarBlue);
     player.translation = Vec2::new(30.0, 0.0);
@@ -59,6 +62,7 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
                 let high_score = engine.texts.get_mut("high_score").unwrap();
                 high_score.value = format!("High Score: {}", game_state.score);
             }
+            engine.audio_manager.play_sfx(SfxPreset::Minimize1, 1.0);
         }
     }
 
@@ -105,8 +109,18 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
         }
     }
 
-    // Reset Score
+    if game_state.spawn_timer.tick(engine.delta).just_finished() {
+        let label = format!("drsweatpants{}", game_state.sweatpants_index);
+        game_state.sweatpants_index += 1;
+        let dsp = engine.add_sprite(label.clone(), "dr_sweatpants.png");
+        dsp.translation.x = thread_rng().gen_range(-550.0..550.0);
+        dsp.translation.y = thread_rng().gen_range(-320.0..320.0);
+        dsp.collision = true;
+        dsp.scale = 4.0;
+        engine.audio_manager.play_sfx(SfxPreset::Minimize2, 0.5);
+    }
 
+    // Reset Score
     if engine.keyboard_state.just_pressed(KeyCode::R) {
         let score = engine.texts.get_mut("score").unwrap();
         game_state.score = 0;
